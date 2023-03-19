@@ -22,8 +22,12 @@
         "title": "Ping server"
       },
       {
-        "command": "gpt-editor.shortSummary",
-        "title": "Generate a short summary"
+        "command": "gpt-editor.shortBlurb",
+        "title": "Generate a short blurb"
+      },
+      {
+        "command": "gpt-editor.summary",
+        "title": "Generate a paragraph-long summary"
       }
     ],
     "configuration": {
