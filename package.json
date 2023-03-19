@@ -2,7 +2,12 @@
   "name": "gpt-editor",
   "displayName": "gpt-editor",
   "description": "Use ChatGPT and other OpenAI models inside VS Code",
-  "version": "0.0.1",
+  "publisher": "nindalf",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nindalf/gpt-editor"
+  },
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.76.0"
   },
