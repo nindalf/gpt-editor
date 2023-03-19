@@ -6,6 +6,7 @@ import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRe
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "gpt-editor" is now active!');
+	const outputChannel = vscode.window.createOutputChannel('GPT-Editor');
 
 	const fix = vscode.commands.registerCommand('gpt-editor.fix', async () => {
 		const prompt = await getPromptFromSelection('What to fix', ['Spelling', 'Grammar', 'Spelling and Grammar'])
@@ -20,7 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 		const prompt = await getPromptFromSelection('Length of summary', ['Sentence', 'Paragraph'])
 		const input_text = getText();
 		const summary = await callOpenAIAPI(input_text, prompt);
-		vscode.window.showInformationMessage(`Suggested summary:${summary}`);
+		outputChannel.appendLine(`Suggested summary: ${summary}`);
+		outputChannel.show();
 	});
 
 	const tone = vscode.commands.registerCommand('gpt-editor.tone', async () => {
@@ -32,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await replaceTextWithGeneratedText(prompt);
 	});
 
-	const opinionatedEdit = vscode.commands.registerCommand('gpt-editor.custom-prompt', async () => {
+	const opinionatedEdit = vscode.commands.registerCommand('gpt-editor.opinionated-edit', async () => {
 		let prompt = prompts.get('Opinionated')??'';
 		await replaceTextWithGeneratedText(prompt);
 	});
