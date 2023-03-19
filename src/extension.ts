@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import axios from 'axios';
+import { isCancel } from "axios"
 import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRequestMessage } from "openai";
 
 
@@ -160,7 +160,7 @@ async function callOpenAIAPI(input_text: string, prompt: string) {
 				signal: controller.signal,
 			});
 		} catch (error) {
-			if (axios.isCancel(error)) {
+			if (isCancel(error)) {
 				console.log("Query to OpenAI cancelled");
 				return '';
 			}
