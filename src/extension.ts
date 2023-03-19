@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 
 import axios from 'axios';
-import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRequestMessage } from "openai";
+import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRequestMessage, CreateChatCompletionResponse } from "openai";
 
 
 // This method is called when your extension is activated
@@ -52,8 +52,8 @@ function getText(): string {
 		0,
 		editor.document.lineCount - 1,
 		editor.document.lineAt(editor.document.lineCount - 1).text.length
-	  );
-	  return editor.document.getText(entireRange);
+	);
+	return editor.document.getText(entireRange);
 }
 
 async function callOpenAIAPI(input_text: string, prompt: string) {
@@ -69,7 +69,7 @@ async function callOpenAIAPI(input_text: string, prompt: string) {
 	const openai = new OpenAIApi(configuration);
 	const messages: Array<ChatCompletionRequestMessage> = [
 		{ "role": "system", "content": "You are a helpful assistant." },
-		{ "role": "user", "content": `Consider this article:\n${input_text}` },
+		{ "role": "user", "content": `Consider this text:\n${input_text}` },
 		{ "role": "user", "content": prompt },
 	];
 	const request: CreateChatCompletionRequest = {
@@ -80,12 +80,32 @@ async function callOpenAIAPI(input_text: string, prompt: string) {
 		top_p: settings.get('gpt-editor.top_p', 0.5),
 		messages: messages
 	}
-	const resp = await openai.createChatCompletion(request);
-	
-	const { choices } = resp.data;
-	const [first_choice] = choices;
-	const result = first_choice.message?.content;
-	return result;
+	return await vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification, // Show in notification area
+		title: 'Querying OpenAI...', // Title of progress indicator
+		cancellable: true // Allow user to cancel
+	}, async (_, token) => {
+		const controller = new AbortController();
+		token.onCancellationRequested(() => {
+			controller.abort();
+		})
+		let resp: any;
+		try {
+			resp = await openai.createChatCompletion(request, {
+				signal: controller.signal,
+			});
+		} catch (error) {
+			if (axios.isCancel(error)) {
+				console.log("Query to OpenAI cancelled");
+				return '';
+			}
+			throw error;
+		}
+		const { choices } = resp.data;
+		const [first_choice] = choices;
+		const result = first_choice.message?.content;
+		return result;
+	})
 }
 
 // This method is called when your extension is deactivated
