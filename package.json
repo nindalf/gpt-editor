@@ -23,11 +23,23 @@
       },
       {
         "command": "gpt-editor.shortBlurb",
-        "title": "Generate a short blurb"
+        "title": "GPT-Editor: Generate a short blurb"
       },
       {
         "command": "gpt-editor.summary",
-        "title": "Generate a paragraph-long summary"
+        "title": "GPT-Editor: Generate a paragraph-long summary"
+      },
+      {
+        "command": "gpt-editor.spelling",
+        "title": "GPT-Editor: Fix spelling"
+      },
+      {
+        "command": "gpt-editor.spelling-and-grammar",
+        "title": "GPT-Editor: Fix spelling and grammar"
+      },
+      {
+        "command": "gpt-editor.opinionated-edit",
+        "title": "GPT-Editor: Improve the text in an opinionated way"
       }
     ],
     "configuration": {

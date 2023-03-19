@@ -26,9 +26,41 @@ export function activate(context: vscode.ExtensionContext) {
 	for (const [command, prompt] of commandPrompts) {
 		const item = vscode.commands.registerCommand(command, async () => {
 			const input_text = getText();
-			console.log(input_text);
 			const summary = await callOpenAIAPI(input_text, prompt);
 			vscode.window.showInformationMessage(`Suggested summary:${summary}`);
+		});
+		context.subscriptions.push(item);
+	}
+	
+	const replacePrompts = [
+		['gpt-editor.spelling', `Please fix any mistakes in spelling in this text. 
+Ignore any code. Make no other changes. Don't add any additional text before or after.`],
+		['gpt-editor.spelling-and-grammar', `Please fix any mistakes in spelling and grammar in this text. 
+Preserve formatting, including any markdown. Ignore any code. Make no other changes. 
+Don't add any additional text before or after.`],
+		['gpt-editor.opinionated-edit', `Please fix any mistakes in spelling and grammar in this text. 
+Shorten the text slightly, remove unnecessary adverbs and make it sound more intelligent. 
+Preserve formatting, including any markdown. Ignore any code. Make no other changes. 
+Don't add any additional text before or after.`],
+	]
+
+	for (const [command, prompt] of replacePrompts) {
+		const item = vscode.commands.registerCommand(command, async () => {
+			const editor = vscode.window.activeTextEditor;
+			if (!editor) {
+				vscode.window.showErrorMessage("No active editor");
+				return '';
+			}
+			const selection = editor.selection;
+			if (selection.isEmpty) {
+				vscode.window.showErrorMessage("No text selected");
+				return '';
+			}
+			const input_text = editor.document.getText(selection);
+			const replaced_text = await callOpenAIAPI(input_text, prompt);
+			editor.edit((editBuilder) => {
+				editBuilder.replace(selection, replaced_text);
+			})
 		});
 		context.subscriptions.push(item);
 	}
@@ -74,7 +106,6 @@ async function callOpenAIAPI(input_text: string, prompt: string) {
 	];
 	const request: CreateChatCompletionRequest = {
 		model: settings.get('gpt-editor.model', 'gpt-3.5-turbo'),
-		max_tokens: 60,
 		n: 1,
 		temperature: settings.get('gpt-editor.temperature', 0.5),
 		top_p: settings.get('gpt-editor.top_p', 0.5),
