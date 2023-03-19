@@ -69,7 +69,7 @@ Ignore any code. Make no other changes. Don't add any additional text before or 
 	['Sentence', `Please write a one sentence blurb of this text. Don't add any additional text before or after.`],
 	['Casual', `Please change the tone of this text to casual`],
 	['Friendly', `Please change the tone of this text to friendly`],
-	['tone.professional', `Please change the tone of this text to professional`],
+	['Professional', `Please change the tone of this text to professional`],
 ])
 
 async function getPromptFromSelection(placeHolder: string, options: Array<string>): Promise<string> {
