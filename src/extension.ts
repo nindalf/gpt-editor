@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import axios from 'axios';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,7 +17,14 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('markdown-gpt.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Markdown-GPT!');
+		vscode.window.showInformationMessage('Hello from Markdown-GPT!');
+	});	
+	
+	let ping = vscode.commands.registerCommand('markdown-gpt.ping', async () => {
+		let response = await axios.get("https://nindalf.com/kudos?url=https://nindalf.com/");
+		const {kudo_count} = response.data;
+		
+		vscode.window.showInformationMessage(`Current kudo count is ${kudo_count}`);
 	});
 
 	context.subscriptions.push(disposable);
