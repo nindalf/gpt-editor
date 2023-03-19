@@ -14,28 +14,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "gpt-editor.helloWorld",
-        "title": "Hello World"
-      },
-      {
-        "command": "gpt-editor.ping",
-        "title": "Ping server"
-      },
-      {
-        "command": "gpt-editor.shortBlurb",
-        "title": "GPT-Editor: Generate a short blurb"
-      },
-      {
         "command": "gpt-editor.summary",
-        "title": "GPT-Editor: Generate a paragraph-long summary"
+        "title": "GPT-Editor: Generate a summary"
       },
       {
-        "command": "gpt-editor.spelling",
-        "title": "GPT-Editor: Fix spelling"
+        "command": "gpt-editor.fix",
+        "title": "GPT-Editor: Fix errors in spelling or grammar"
       },
       {
-        "command": "gpt-editor.spelling-and-grammar",
-        "title": "GPT-Editor: Fix spelling and grammar"
+        "command": "gpt-editor.tone",
+        "title": "GPT-Editor: Change the tone to friendly, casual or professional"
       },
       {
         "command": "gpt-editor.opinionated-edit",

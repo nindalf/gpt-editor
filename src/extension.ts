@@ -1,96 +1,101 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
 import axios from 'axios';
-import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRequestMessage, CreateChatCompletionResponse } from "openai";
+import { Configuration, OpenAIApi, CreateChatCompletionRequest, ChatCompletionRequestMessage } from "openai";
 
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "gpt-editor" is now active!');
 
-	const ping = vscode.commands.registerCommand('gpt-editor.ping', async () => {
-		const response = await axios.get("https://nindalf.com/kudos?url=https://nindalf.com/");
-		const { kudo_count } = response.data;
-
-		vscode.window.showInformationMessage(`Current kudo count is ${kudo_count}`);
+	const fix = vscode.commands.registerCommand('gpt-editor.fix', async () => {
+		const prompt = await getPromptFromSelection('What to fix', ['Spelling', 'Grammar', 'Spelling and Grammar'])
+		if (!prompt) {
+			vscode.window.showErrorMessage("Unknown prompt");
+			return;
+		}
+		await replaceTextWithGeneratedText(prompt);
 	});
 
-	const commandPrompts = [
-		['gpt-editor.shortBlurb', `Please write a one sentence blurb of this text. Don't add any additional text before or after.`],
-		['gpt-editor.summary', `Please write a one paragraph summary of this text. Don't add any additional text before or after.`],
-	]
+	const summary = vscode.commands.registerCommand('gpt-editor.summary', async () => {
+		const prompt = await getPromptFromSelection('Length of summary', ['Sentence', 'Paragraph'])
+		const input_text = getText();
+		const summary = await callOpenAIAPI(input_text, prompt);
+		vscode.window.showInformationMessage(`Suggested summary:${summary}`);
+	});
 
-	for (const [command, prompt] of commandPrompts) {
-		const item = vscode.commands.registerCommand(command, async () => {
-			const input_text = getText();
-			const summary = await callOpenAIAPI(input_text, prompt);
-			vscode.window.showInformationMessage(`Suggested summary:${summary}`);
-		});
-		context.subscriptions.push(item);
-	}
-	
-	const replacePrompts = [
-		['gpt-editor.spelling', `Please fix any mistakes in spelling in this text. 
-Ignore any code. Make no other changes. Don't add any additional text before or after.`],
-		['gpt-editor.spelling-and-grammar', `Please fix any mistakes in spelling and grammar in this text. 
-Preserve formatting, including any markdown. Ignore any code. Make no other changes. 
-Don't add any additional text before or after.`],
-		['gpt-editor.opinionated-edit', `Please fix any mistakes in spelling and grammar in this text. 
-Shorten the text slightly, remove unnecessary adverbs and make it sound more intelligent. 
-Preserve formatting, including any markdown. Ignore any code. Make no other changes. 
-Don't add any additional text before or after.`],
-	]
+	const tone = vscode.commands.registerCommand('gpt-editor.tone', async () => {
+		const prompt = await getPromptFromSelection('Tone to use', ['Casual', 'Friendly', 'Professional'])
+		if (!prompt) {
+			vscode.window.showErrorMessage("Unknown prompt");
+			return;
+		}
+		await replaceTextWithGeneratedText(prompt);
+	});
 
-	for (const [command, prompt] of replacePrompts) {
-		const item = vscode.commands.registerCommand(command, async () => {
-			const editor = vscode.window.activeTextEditor;
-			if (!editor) {
-				vscode.window.showErrorMessage("No active editor");
-				return '';
-			}
-			const selection = editor.selection;
-			if (selection.isEmpty) {
-				vscode.window.showErrorMessage("No text selected");
-				return '';
-			}
-			const input_text = editor.document.getText(selection);
-			const replaced_text = await callOpenAIAPI(input_text, prompt);
-			editor.edit((editBuilder) => {
-				editBuilder.replace(selection, replaced_text);
-			})
-		});
-		context.subscriptions.push(item);
-	}
+	const opinionatedEdit = vscode.commands.registerCommand('gpt-editor.custom-prompt', async () => {
+		let prompt = prompts.get('Opinionated')??'';
+		await replaceTextWithGeneratedText(prompt);
+	});
 
-	const item = vscode.commands.registerCommand('gpt-editor.custom-prompt', async () => {
+	const customPrompt = vscode.commands.registerCommand('gpt-editor.custom-prompt', async () => {
 		let prompt = await vscode.window.showInputBox({
 			prompt: 'Enter a custom prompt to apply to the selected text',
 			value: ''
-		  });
+		});
 		if (!prompt) {
 			vscode.window.showErrorMessage("Need a valid prompt");
 			return '';
 		}
-		const editor = vscode.window.activeTextEditor;
-		if (!editor) {
-			vscode.window.showErrorMessage("No active editor");
-			return '';
-		}
-		const selection = editor.selection;
-		if (selection.isEmpty) {
-			vscode.window.showErrorMessage("No text selected");
-			return '';
-		}
-		const input_text = editor.document.getText(selection);
-		const replaced_text = await callOpenAIAPI(input_text, prompt);
-		editor.edit((editBuilder) => {
-			editBuilder.replace(selection, replaced_text);
-		})
+		await replaceTextWithGeneratedText(prompt);
 	});
-	context.subscriptions.push(item);
+
+	context.subscriptions.push(fix, summary, tone, opinionatedEdit, customPrompt);
+}
+
+const prompts = new Map<string, string>([
+	['Opinionated', `Please fix any mistakes in spelling and grammar in this text. 
+Shorten the text slightly, remove unnecessary adverbs and make it sound more intelligent. 
+Preserve formatting, including any markdown. Ignore any code. Make no other changes. 
+Don't add any additional text before or after.`],
+	['Spelling', `Please fix any mistakes in spelling in this text. 
+Ignore any code. Make no other changes. Don't add any additional text before or after.`],
+	['Grammar', `Please fix any mistakes in grammar in this text. 
+Ignore any code. Make no other changes. Don't add any additional text before or after.`],
+	['Spelling and Grammar', `Please fix any mistakes in spelling and grammar in this text. 
+Ignore any code. Make no other changes. Don't add any additional text before or after.`],
+	['Paragraph', `Please write a one paragraph summary of this text. Don't add any additional text before or after.`],
+	['Sentence', `Please write a one sentence blurb of this text. Don't add any additional text before or after.`],
+	['Casual', `Please change the tone of this text to casual`],
+	['Friendly', `Please change the tone of this text to friendly`],
+	['tone.professional', `Please change the tone of this text to professional`],
+])
+
+async function getPromptFromSelection(placeHolder: string, options: Array<string>): Promise<string> {
+	const selectedOption = await vscode.window.showQuickPick(options, {
+		placeHolder: placeHolder,
+	});
+	if (!selectedOption) {
+		return '';
+	}
+	return prompts.get(selectedOption) ?? '';
+}
+
+async function replaceTextWithGeneratedText(prompt: string) {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showErrorMessage("No active editor");
+		return '';
+	}
+	const selection = editor.selection;
+	if (selection.isEmpty) {
+		vscode.window.showErrorMessage("No text selected");
+		return '';
+	}
+	const input_text = editor.document.getText(selection);
+	const replaced_text = await callOpenAIAPI(input_text, prompt);
+	editor.edit((editBuilder) => {
+		editBuilder.replace(selection, replaced_text);
+	})
 }
 
 function getText(): string {
