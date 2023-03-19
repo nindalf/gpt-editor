@@ -1,4 +1,4 @@
-# markdown-gpt README
+# gpt-editor README
 
 This is the README for your extension "markdown-gpt". After writing up a brief description, we recommend including the following sections.
 

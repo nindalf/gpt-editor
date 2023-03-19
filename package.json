@@ -1,7 +1,7 @@
 {
-  "name": "markdown-gpt",
-  "displayName": "Markdown-GPT",
-  "description": "Use GPT to edit and summarize your markdown",
+  "name": "gpt-editor",
+  "displayName": "gpt-editor",
+  "description": "Use ChatGPT and other OpenAI models inside VS Code",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.76.0"
@@ -14,18 +14,43 @@
   "contributes": {
     "commands": [
       {
-        "command": "markdown-gpt.helloWorld",
+        "command": "gpt-editor.helloWorld",
         "title": "Hello World"
       },
       {
-        "command": "markdown-gpt.ping",
+        "command": "gpt-editor.ping",
         "title": "Ping server"
       },
       {
-        "command": "markdown-gpt.shortSummary",
+        "command": "gpt-editor.shortSummary",
         "title": "Generate a short summary"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "GPT Editor",
+      "properties": {
+        "gpt-editor.openai_api_key" : {
+          "type": "string",
+          "default": "",
+          "description": "Your API key from https://platform.openai.com/account/api-keys"
+        },
+        "gpt-editor.model" : {
+          "type": "string",
+          "default": "gpt-3.5-turbo",
+          "description": "One of the models supporting chat completion from https://platform.openai.com/docs/models/overview"
+        },
+        "gpt-editor.temperature" : {
+          "type": "number",
+          "default": 0.5,
+          "description": "Controls the creativity of the generated text. Lower values produce more conservative text that closely matches the input prompt, while higher values produce more unexpected and creative responses. A common range for this parameter is between 0.1 and 1.0, with lower values producing more conservative responses."
+        },
+        "gpt-editor.top_p" : {
+          "type": "number",
+          "default": 0.5,
+          "description": "Controls the diversity of the generated text. This parameter represents the cumulative probability of the most likely tokens in the generated text. Lower values for top_p generate more diverse responses, while higher values generate more common responses. A common range for this parameter is between 0.3 and 0.9."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
