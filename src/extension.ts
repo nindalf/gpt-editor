@@ -64,6 +64,33 @@ Don't add any additional text before or after.`],
 		});
 		context.subscriptions.push(item);
 	}
+
+	const item = vscode.commands.registerCommand('gpt-editor.custom-prompt', async () => {
+		let prompt = await vscode.window.showInputBox({
+			prompt: 'Enter a custom prompt to apply to the selected text',
+			value: ''
+		  });
+		if (!prompt) {
+			vscode.window.showErrorMessage("Need a valid prompt");
+			return '';
+		}
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			vscode.window.showErrorMessage("No active editor");
+			return '';
+		}
+		const selection = editor.selection;
+		if (selection.isEmpty) {
+			vscode.window.showErrorMessage("No text selected");
+			return '';
+		}
+		const input_text = editor.document.getText(selection);
+		const replaced_text = await callOpenAIAPI(input_text, prompt);
+		editor.edit((editBuilder) => {
+			editBuilder.replace(selection, replaced_text);
+		})
+	});
+	context.subscriptions.push(item);
 }
 
 function getText(): string {

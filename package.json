@@ -40,6 +40,10 @@
       {
         "command": "gpt-editor.opinionated-edit",
         "title": "GPT-Editor: Improve the text in an opinionated way"
+      },
+      {
+        "command": "gpt-editor.custom-prompt",
+        "title": "GPT-Editor: Run a custom prompt on the selected text"
       }
     ],
     "configuration": {
